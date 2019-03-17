@@ -19,7 +19,7 @@ void servo_init()
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInit(TIM3, & TIM_TimeBaseStructure);
-  //  TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE );
+  //TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE );
 
     TIM_OCInitTypeDef TIM_OCInitStructure;
     TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
@@ -68,5 +68,4 @@ void GPIO_Configuration(void)
 
     GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_6;
     GPIO_Init(GPIOA, &GPIO_InitStructure);
-
 }
