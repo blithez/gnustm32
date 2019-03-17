@@ -31,7 +31,6 @@ void bmp085_task()
     uint32_t UP;
     for (; ; )
     {
-
         i2c_write_bmp085(0xee,0xf4,0x2e);
         vTaskDelay(5);
 

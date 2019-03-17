@@ -18,9 +18,10 @@ SRC += $(wildcard ../cmsis/DeviceSupport/*.c)
 SRC += $(wildcard ../cmsis/CoreSupport/*.c)
 SRC += $(wildcard ../drivers/*.c)
 
+OUTDIR := ./out
 OBJS += $(patsubst %.c,%.o,$(SRC))
 OBJS += startup_stm32f10x_md.o stm32f10x_it.o heap_4.o main.o
-OUTOBJS +=$(patsubst %.o,./output/%.o,$(notdir $(OBJS)))
+OUTOBJS +=$(patsubst %.o,$(OUTDIR)/%.o,$(notdir $(OBJS)))
 
 CFLAGS += -mcpu=cortex-m3 -mthumb 
 CFLAGS += -Os
@@ -32,25 +33,26 @@ LFLAGS += -Wl,--gc-sections
 
 .PHONY: all clean
 
-all:blink.elf
-	@arm-none-eabi-objcopy -O ihex -S -g $< out.hex
-	@arm-none-eabi-objcopy $< -O binary -S -g out.bin
+all:$(OUTDIR)/blink.elf
+	@arm-none-eabi-objcopy -O ihex -S -g $< $(OUTDIR)/out.hex
+	@arm-none-eabi-objcopy $< -O binary -S -g $(OUTDIR)/out.bin
 	@echo finished
+
+$(OUTDIR)/blink.elf:$(OUTOBJS)
+	@$(CC) $(LFLAGS) $(OUTOBJS) -T ./stm32_flash.ld -o $@
+	@arm-none-eabi-size $@
+
 clean:
 	@rm -f $(OBJS) $(OBJ_FLASH) $(OBJ_SRAM)
 	@rm -f out.hex blink.elf out.bin
-	@rm -f ./output/*.o
-    
-blink.elf:$(OUTOBJS)
-	@$(CC) $(LFLAGS) $(OUTOBJS) -T ./stm32_flash.ld -o $@
-	@arm-none-eabi-size $@
-    
-./output/%.o:%.s
+	@rm -f $(OUTDIR)*.o
+
+$(OUTDIR)/%.o:%.s
 	@echo cc: $<
 	@$(CC) $(CFLAGS) -c $< -o $@
-./output/%.o:%.c
+$(OUTDIR)/%.o:%.c
 	@echo cc: $<
 	@$(CC) $(CFLAGS) $(DEFS) $(INCS) -c $< -o $@
-./output/%.o:%.cpp
+$(OUTDIR)/%.o:%.cpp
 	@echo cxx: $<
 	@$(CXX) $(CFLAGS) $(DEFS) $(INCS) -c $< -o $@
