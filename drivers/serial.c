@@ -147,14 +147,14 @@ void USART1_IRQHandler()
 
     if(USART_GetITStatus(USART1,USART_IT_IDLE)== SET)
     {
-        temp = USART1->SR;//先读SR，然后读DR才能清除
+        temp = USART1->SR;
         temp = USART1->DR;
         temp = temp;
 
-        DMA_Cmd(DMA1_Channel5,DISABLE);    //关闭DMA
-        available_data_size = RX_BUFFER_SIZE -  DMA_GetCurrDataCounter(DMA1_Channel5);      //得到真正接收数据个数
-        DMA1_Channel5->CNDTR = RX_BUFFER_SIZE;       //重新设置接收数据个数
-        DMA_Cmd(DMA1_Channel5,ENABLE);  //开启DMA
+        DMA_Cmd(DMA1_Channel5,DISABLE);
+        available_data_size = RX_BUFFER_SIZE -  DMA_GetCurrDataCounter(DMA1_Channel5);
+        DMA1_Channel5->CNDTR = RX_BUFFER_SIZE;
+        DMA_Cmd(DMA1_Channel5,ENABLE);
         USART_ClearITPendingBit(USART1, USART_IT_IDLE);
 
         BaseType_t pxHigherPriorityTaskWoken = pdTRUE;

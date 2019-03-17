@@ -8,16 +8,6 @@
 #include "datapack.h"
 #include "i2c.h"
 
-#include "inv_mpu.h"
-#include "inv_mpu_dmp_motion_driver.h"
-#include "invensense.h"
-#include "invensense_adv.h"
-#include "eMPL_outputs.h"
-#include "mltypes.h"
-#include "mpu.h"
-#include "log.h"
-
-
 #define AC1 ((int16_t)0x1a47)
 #define AC2 ((int16_t)0xfba0)
 #define AC3 ((int16_t)0xc780)
@@ -53,10 +43,8 @@ void bmp085_task()
         B5=X1+X2;
         T=(B5+8)>>4;
 
-
         i2c_write_bmp085(0xee,0xf4,0x34);
-        vTaskDelay(5);
-
+        vTaskDelay(5);  //delay 5 ticks, about 5 ms.
 
         i2c_read_dma(0xee,0xf6,3,(uint8_t*)&UP);
 
@@ -84,7 +72,6 @@ void bmp085_task()
         X1=(X1*3038)>>16;
         X2=(-7375*p)>>16;
         p=p+((X1+X2+3791)>>4);
-
     }
 }
 
@@ -106,7 +93,6 @@ void communicate_task ()
     }
 }
 
-
 void main (void)
 {
     SysTick_Config (72000);
@@ -117,16 +103,9 @@ void main (void)
     servo_init ();
     i2c_init();
 
-    mpu_init(NULL);
-
     xTaskCreate ((TaskFunction_t) bmp085_task, "communication", 200, NULL, 6, NULL);
     xTaskCreate ((TaskFunction_t) communicate_task, "communication", 100, NULL, 6, NULL);
 
     vTaskStartScheduler ();
-
-    //shouldn't go here
-    for (; ; )
-        ;
+    for (;;);
 }
-
-
