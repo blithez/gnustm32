@@ -1,0 +1,6 @@
+[submodule "Cobs"]
+	path = Cobs
+	url = git@github.com:blithez/Cobs.git
+[submodule "cobs"]
+	path = cobs
+	url = git@github.com:blithez/Cobs.git
