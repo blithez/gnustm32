@@ -38,12 +38,12 @@ void main (void)
 
     led_init ();
     led_blinker (100);
-    serial_init ();
-    servo_init ();
-    i2c_init();
+    //serial_init ();
+    //servo_init ();
+    //i2c_init();
 
-    xTaskCreate ((TaskFunction_t) bmp085_task, "communication", 200, NULL, 6, NULL);
-    xTaskCreate ((TaskFunction_t) communicate_task, "communication", 100, NULL, 6, NULL);
+    //xTaskCreate ((TaskFunction_t) bmp085_task, "communication", 200, NULL, 6, NULL);
+    //xTaskCreate ((TaskFunction_t) communicate_task, "communication", 100, NULL, 6, NULL);
 
     vTaskStartScheduler ();
     for (;;);
