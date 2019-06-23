@@ -1,5 +1,8 @@
 #include "serial.h"
 
+static uint8_t serial_rx_buffer[RX_BUFFER_SIZE];
+static StreamBufferHandle_t rx_buffer;
+
 void serial_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -84,9 +87,8 @@ void serial_init(void)
     NVIC_Init (&NVIC_InitStructure);
     DMA_ITConfig(DMA1_Channel5, DMA_IT_TC, ENABLE);*/
 
-    /********************task for copy data into queue buffer**************/
+    /* create a steam buffer to storage received data */
     rx_buffer = xStreamBufferCreate( RX_MAX_STREAM_SIZE,1 );
-    xTaskCreate((TaskFunction_t) cx_copy_task, "rx_mover", RX_TASK_STACK_SIZE, NULL, configMAX_PRIORITIES - 2, &cx_copy_task_id);
 }
 
 int32_t serial_write(uint8_t *src,int32_t len)
@@ -104,11 +106,12 @@ int32_t serial_write(uint8_t *src,int32_t len)
     {
         USART_SendData(USART1,*src);
     }else
-    {//use DMA for transmissionS
+    {
+    	//use DMA for transmission
         DMA_Cmd(DMA1_Channel4, DISABLE);
-        DMA1_Channel4->CNDTR = len;  //dma buffersize
-        DMA1_Channel4->CPAR = (uint32_t)&USART1->DR;   //dma peripheral base address
-        DMA1_Channel4->CMAR = (uint32_t)src;       //dma memory base addr
+        DMA1_Channel4->CNDTR = len;  					//dma buffersize
+        DMA1_Channel4->CPAR = (uint32_t)&USART1->DR;   	//dma peripheral base address
+        DMA1_Channel4->CMAR = (uint32_t)src;       		//dma memory base addr
         DMA_Cmd(DMA1_Channel4, ENABLE);
 
         USART_DMACmd(USART1,USART_DMAReq_Tx, ENABLE);
@@ -129,21 +132,10 @@ int32_t serial_read(uint8_t *src,int32_t len)
 }
 
 /*****************************interrupt handler****************************/
-
-extern TaskHandle_t consumerid;
-
-void DMA1_Channel5_IRQHandler()
-{
-    if(DMA_GetFlagStatus(DMA1_FLAG_TC5) == SET)
-    {
-
-    }
-    DMA_ClearITPendingBit(DMA1_IT_TC5);
-}
-
 void USART1_IRQHandler()
 {
     uint32_t temp;
+    uint32_t available_data_size;
 
     if(USART_GetITStatus(USART1,USART_IT_IDLE)== SET)
     {
@@ -151,23 +143,19 @@ void USART1_IRQHandler()
         temp = USART1->DR;
         temp = temp;
 
-        DMA_Cmd(DMA1_Channel5,DISABLE);
-        available_data_size = RX_BUFFER_SIZE -  DMA_GetCurrDataCounter(DMA1_Channel5);
-        DMA1_Channel5->CNDTR = RX_BUFFER_SIZE;
-        DMA_Cmd(DMA1_Channel5,ENABLE);
         USART_ClearITPendingBit(USART1, USART_IT_IDLE);
 
-        BaseType_t pxHigherPriorityTaskWoken = pdTRUE;
-        vTaskNotifyGiveFromISR(cx_copy_task_id,&pxHigherPriorityTaskWoken);
+        DMA_Cmd(DMA1_Channel5,DISABLE);
+        available_data_size = RX_BUFFER_SIZE -  DMA_GetCurrDataCounter(DMA1_Channel5);
+
+        /* store data into stream buffer */
+        BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
+        xStreamBufferSendFromISR( rx_buffer, &serial_rx_buffer, available_data_size, &pxHigherPriorityTaskWoken );
+
+        DMA1_Channel5->CNDTR = RX_BUFFER_SIZE;
+        DMA_Cmd(DMA1_Channel5,ENABLE);
+
         portYIELD_FROM_ISR( pxHigherPriorityTaskWoken );
     }
 }
 
-void cx_copy_task()
-{
-    for(;;)
-    {
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        xStreamBufferSend( rx_buffer, serial_rx_buffer, available_data_size,0 );
-    }
-}

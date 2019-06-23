@@ -24,13 +24,10 @@ typedef struct
     uint8_t hardwareflowcontrol;
 }serial_config_t;
 
-#define BAUDRATE 9600
+#define BAUDRATE 115200
 #define RX_BUFFER_SIZE 20
 #define RX_MAX_STREAM_SIZE 100
 #define RX_TASK_STACK_SIZE 120
-
-static uint8_t serial_rx_buffer[RX_BUFFER_SIZE];
-static uint32_t available_data_size;
 
 /**************************global call function********************************/
 void serial_init(void); //default serial initialization
@@ -38,8 +35,6 @@ int32_t serial_write(uint8_t *src,int32_t len);
 int32_t serial_read(uint8_t *src,int32_t len);
 
 /***************************private call function******************************/
-static StreamBufferHandle_t rx_buffer;
-static TaskHandle_t cx_copy_task_id;
-static void cx_copy_task();
+//static TaskHandle_t cx_copy_task_id;
 
 #endif
