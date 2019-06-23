@@ -34,5 +34,5 @@ static void blink_task(void *arg)
 
 void led_blinker(uint32_t ms)
 {
-    xTaskCreate((TaskFunction_t) blink_task, "blinker", 100, (void*)ms, 4,NULL);
+    xTaskCreate((TaskFunction_t) blink_task, "blinker", 64, (void*)ms, 1,NULL);
 }
